@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EngageEdu</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css" rel="stylesheet">
+
+    <!-- Vue.js -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <!-- Vuetify -->
+    <link href="https://cdn.jsdelivr.net/npm/vuetify@3.4.10/dist/vuetify.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@3.4.10/dist/vuetify.min.js"></script>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+
+</head>
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: sans-serif;
+    }
+
+    body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        background-image: url(./bg.jpg);
+        background-size: cover;
+        /* ปรับขนาดรูปให้พอดีกับจอ */
+        background-position: center;
+        /* จัดรูปให้อยู่ตรงกลาง */
+        background-repeat: no-repeat;
+        /* ไม่ให้รูปซ้ำ */
+    }
+
+    .wrapper {
+        width: 420px;
+        background-color: transparent;
+        border: 2px solid rgb(60, 40, 29);
+        backdrop-filter: blur(10px);
+        /* เพิ่มระดับเบลอ */
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        /* เพิ่มเงาให้ดูมีมิติ */
+        color: white;
+        border-radius: 10px;
+        padding: 30px 40px 15px;
+
+        /* ทำให้ดูเหมือนลอยขึ้น */
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    /* เมื่อ hover จะขยับขึ้นและเพิ่มเงา */
+    .wrapper:hover {
+        transform: translateY(-10px);
+        /* ขยับขึ้นเล็กน้อย */
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+        /* เพิ่มเงาให้เด่นขึ้น */
+    }
+
+    /* เอฟเฟกต์ตอนโหลด (fade-in + scale) */
+    @keyframes fadeInScale {
+        0% {
+            opacity: 0;
+            transform: scale(0.8);
+        }
+
+        100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    /* ใช้ animation ตอนหน้าโหลด */
+    .wrapper {
+        animation: fadeInScale 0.5s ease-out;
+    }
+
+
+    .wrapper h1 {
+        font-size: 36px;
+        text-align: center;
+    }
+
+
+    .one {
+        outline: none;
+        cursor: pointer;
+        border: none;
+        margin: 0;
+        font-family: inherit;
+        font-size: inherit;
+        position: relative;
+        display: inline-block;
+        letter-spacing: 0.05rem;
+        font-weight: 700;
+        font-size: 17px;
+        border-radius: 500px;
+        overflow: hidden;
+        background: #fb382e;
+        color: ghostwhite;
+        min-width: 100%;
+        margin: 20px 0;
+        padding: 30px;
+    }
+
+    button.two {
+        outline: none;
+        cursor: pointer;
+        border: none;
+        padding: 0.9rem 2rem;
+        margin: 0;
+        font-family: inherit;
+        font-size: inherit;
+        position: relative;
+        display: inline-block;
+        letter-spacing: 0.05rem;
+        font-weight: 700;
+        font-size: 17px;
+        border-radius: 500px;
+        overflow: hidden;
+        background: #f65f32;
+        color: ghostwhite;
+        min-width: 100%;
+        margin: 20px 0;
+        padding: 30px;
+    }
+
+    button span {
+        position: relative;
+        z-index: 10;
+        transition: color 0.4s;
+    }
+
+    button:hover span {
+        color: rgb(255, 255, 255);
+    }
+
+    button::before,
+    button::after {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+    }
+
+    button::before {
+        content: "";
+        background: #734532;
+        width: 120%;
+        left: -10%;
+        transform: skew(30deg);
+        transition: transform 0.4s cubic-bezier(0.3, 1, 0.8, 1);
+    }
+
+    button:hover::before {
+        transform: translate3d(100%, 0, 0);
+    }
+</style>
+
+<body>
+
+    <div id="app">
+        <div class="wrapper">
+            <h1>Log in</h1>
+            <v-btn class="one" @click="google_login"> <span>Google</span> </v-btn>
+            <br>
+            <v-btn class="two"  @click="google_login"> <span>Google kku</span> </v-btn>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBkKXN0vafPsAJluoOy5fNzeMgPuYvc_CM",
+            authDomain: "project2566-bcb52.firebaseapp.com",
+            projectId: "project2566-bcb52",
+            storageBucket: "project2566-bcb52.firebasestorage.app",
+            messagingSenderId: "780274656067",
+            appId: "1:780274656067:web:26a8f3d6ad1476bacc85f6",
+            measurementId: "G-XRSE8HPBDL"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        const vuetify = Vuetify.createVuetify();
+
+        const app = Vue.createApp({
+
+            data() {
+                return {
+                    user: [],  // เก็บข้อมูลผู้ใช้
+                };
+            },
+
+            methods: {
+                google_login() {
+                    const provider = new firebase.auth.GoogleAuthProvider();
+                    firebase.auth().signInWithPopup(provider)
+                        .then((result) => {
+                            console.log("Logged in successfully", result.user);
+                            // เปลี่ยนหน้าไปยังหน้าอื่น
+                            window.location.href = "p_home.html";  // เปลี่ยนที่นี้เป็นหน้าที่คุณต้องการ
+                        })
+                        .catch((error) => {
+                            console.error("Error logging in", error);
+                        });
+                },
+            },
+
+        });
+
+        app.use(vuetify).mount("#app");
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classroom Test</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css" rel="stylesheet">
+
+    <!-- Vue.js -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <!-- Vuetify -->
+    <link href="https://cdn.jsdelivr.net/npm/vuetify@3.4.10/dist/vuetify.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@3.4.10/dist/vuetify.min.js"></script>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Arial", sans-serif;
+        }
+
+        /* Header ปรับให้สูงขึ้นและมีเงา */
+        .custom-header {
+            height: 80px !important;
+            padding-top: 10px;
+            /* ขยายให้สูงขึ้น */
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            background-color: #734532 !important;
+            /* สีเทา-น้ำเงิน (blue-grey) */
+            border-bottom-left-radius: 10px;
+            border-bottom-right-radius: 10px;
+        }
+
+        .header {
+            color: #ffffff;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        /* Sidebar */
+        .custom-sidebar {
+            background-color: white;
+            border: 2px solid #734532;
+            padding: 10px;
+            padding-top: 50px;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar-item {
+            font-size: 18px;
+            font-weight: 500;
+            color: #000000;
+            border-radius: 8px;
+            transition: background 0.3s;
+        }
+
+        .sidebar-item:hover {
+            background: #aeaeae;
+        }
+
+        .content {
+            padding-top: 50px;
+            padding-right: 1px;
+            margin-left: 100px;
+            align-items: center;
+        }
+
+        .log {
+            padding-top: 10px;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        .welcome {
+            padding-left: 7px;
+        }
+
+        .one {
+            padding-left: 10px;
+        }
+
+        .pa-10 {
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            /* เพิ่มเงา */
+            transition: box-shadow 0.3s ease, transform 0.3s ease;
+            /* ทำให้การเปลี่ยนแปลงเนียน */
+
+            background-color: #d4cbcb;
+        }
+
+        .pa-10:hover {
+            transform: translateY(-5px);
+            /* ทำให้ card ยกขึ้นเล็กน้อยเมื่อ hover */
+            box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.2);
+            /* เพิ่มเงามากขึ้นเมื่อ hover */
+        }
+
+        .v-btn:hover {
+            transform: scale(1.1);
+            /* ขยายขนาดปุ่มเล็กน้อย */
+            transition: transform 0.2s ease;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        .mr-5 {
+            margin-left: 50px;
+        }
+
+        .custom-button {
+            background-color: #734532;
+        }
+
+        body{
+            background-color: #ffffff;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <v-app>
+
+            <v-app-bar class="custom-header" density="comfortable">
+                <v-toolbar-title class="header">EngageEdu</v-toolbar-title>
+            </v-app-bar>
+
+            <v-container fluid>
+                <v-row>
+                    <v-col cols="2">
+                        <v-navigation-drawer permanent class="custom-sidebar">
+                            <v-list dense>
+                                <v-list-item href="./p_home.html" class="sidebar-item">
+                                    <v-icon class="mr-3">mdi-home</v-icon> Home
+                                </v-list-item>
+
+                                <v-list-item href="./p_profile.html" class="sidebar-item">
+                                    <v-icon class="mr-3">mdi-account</v-icon> Profile
+                                </v-list-item>
+
+                                <v-list-item href="./p_create.html" class="sidebar-item">
+                                    <v-icon class="mr-3">mdi-book</v-icon> Create Class
+                                </v-list-item>
+
+                                <v-divider></v-divider>
+
+                                <div class="log">
+                                    <v-list-item v-if="user">
+                                        <v-btn block color="error" class="custom-button" @click="google_logout">
+                                            Log out
+                                        </v-btn>
+                                    </v-list-item>
+                                </div>
+                            </v-list>
+                        </v-navigation-drawer>
+                    </v-col>
+
+                    <v-col cols="10" class="content" width="100%">
+                        <v-main>
+                            <v-container>
+                                <v-card class="pa-10">
+                                    <div class="welcome">
+                                        <h2>Welcome to Classroom </h2>
+                                        <p>มาเริ่มต้นเรียนรู้และศึกษาสิ่งใหม่ๆกันเถอะ</p>
+                                    </div>
+
+                                    <v-card-actions>
+                                        <v-btn class="custom-button" @click="autoRead()">ข้อมูลผู้ใช้ของฉัน</v-btn>
+                                        <v-btn class="custom-button" @click="addData()">เพิ่มข้อมูลผู้ใช้</v-btn>
+
+                                        <!-- ข้อความแจ้งเตือนหากยังไม่มีข้อมูล -->
+                                        <v-dialog v-model="showUserDialog" persistent max-width="400">
+                                            <v-card>
+                                                <v-card-title class="text-h5">กรุณากรอกข้อมูลผู้ใช้</v-card-title>
+                                                <v-card-text>คุณต้องกรอกข้อมูลผู้ใช้ก่อน
+                                                    ถึงจะสามารถดูและแก้ไขข้อมูลได้</v-card-text>
+                                                <v-card-actions>
+                                                    <v-spacer></v-spacer>
+                                                    <v-btn color="primary" @click="addData()">เพิ่มข้อมูลผู้ใช้</v-btn>
+                                                    <v-btn color="error" @click="showUserDialog = false">ปิด</v-btn>
+                                                </v-card-actions>
+                                            </v-card>
+                                        </v-dialog>
+
+                                    </v-card-actions>
+
+                                    <v-card-actions>
+                                        <v-card width="100%" class="pa-4" elevation="2">
+                                            <v-row v-for="u in users" :key="u.uid" align="center">
+                                                <!-- Avatar and Photo -->
+                                                <v-col cols="12" sm="2" class="d-flex justify-center">
+                                                    <v-avatar size="120" class="ma-2">
+                                                        <v-img :src="u.photo" width="100%"></v-img>
+                                                    </v-avatar>
+                                                </v-col>
+
+                                                <!-- User Info -->
+                                                <v-col cols="12" sm="8">
+                                                    <div class="text-h6 font-weight-bold">{{ u.fname }} {{ u.lname }}
+                                                    </div>
+                                                    <div><strong>UID:</strong> {{ u.id }}</div>
+                                                    <div><strong>Email:</strong> {{ u.email }}</div>
+                                                    <div><strong>Status:</strong> {{ u.status }}</div>
+                                                </v-col>
+
+                                                <!-- Action Buttons -->
+                                                <v-col cols="12" sm="2" class="d-flex justify-end align-center">
+                                                    <v-btn @click="edit(u)" color="primary" fab small class="ma-2"
+                                                        elevation="2">
+                                                        <v-icon>mdi-account-edit</v-icon>
+                                                    </v-btn>
+                                                    <v-btn @click="deleteData(u)" color="red" fab small class="ma-2"
+                                                        elevation="2">
+                                                        <v-icon>mdi-account-remove</v-icon>
+                                                    </v-btn>
+                                                </v-col>
+                                            </v-row>
+                                        </v-card>
+                                    </v-card-actions>
+                                </v-card>
+
+                                <v-card v-if="editmode">
+                                    <v-card-text>
+                                        <v-card-title>{{ editmode }}</v-card-title>
+                                        <v-text-field v-model="editu.id" label="ID"></v-text-field>
+                                        <v-text-field v-model="editu.fname" label="ชื่อ"></v-text-field>
+                                        <v-text-field v-model="editu.lname" label="นามสกุล"></v-text-field>
+                                        <v-text-field v-model="editu.email" label="email"></v-text-field>
+                                        <v-text-field v-model="editu.photo" label="URL รูปภาพ"></v-text-field>
+                                        <v-img :src="editu.photo" width="150" v-if="editu.photo"></v-img>
+                                        <v-combobox v-model="editu.status" label="สถานะ"
+                                            :items="['อาจารย์','นักเรียน']"></v-combobox>
+                                    </v-card-text>
+                                    <v-card-actions>
+                                        <v-btn @click="saveData()">Save</v-btn>
+                                        <v-btn @click="editmode=0">Cancel</v-btn>
+                                    </v-card-actions>
+                                </v-card>
+                            </v-container>
+                        </v-main>
+                    </v-col>
+                </v-row>
+            </v-container>
+        </v-app>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBkKXN0vafPsAJluoOy5fNzeMgPuYvc_CM",
+            authDomain: "project2566-bcb52.firebaseapp.com",
+            projectId: "project2566-bcb52",
+            storageBucket: "project2566-bcb52.firebasestorage.app",
+            messagingSenderId: "780274656067",
+            appId: "1:780274656067:web:26a8f3d6ad1476bacc85f6",
+            measurementId: "G-XRSE8HPBDL"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        const vuetify = Vuetify.createVuetify();
+
+        const app = Vue.createApp({
+            data() {
+                return {
+                    users: [],  // All user data
+                    showUserDialog: false,
+                    editmode: "",
+                    editu: {},
+                    showLoginDialog: false,  // Ensure showLoginDialog is defined here
+                };
+            },
+
+            mounted() {
+                firebase.auth().onAuthStateChanged((user) => {
+                    this.user = user;
+                    if (!user) {
+                        window.location.href = "p_login.html";  // ถ้ายังไม่ล็อกอินให้กลับไปหน้า login
+                    } else {
+                        this.autoRead();  // ดึงข้อมูลห้องเรียนอัตโนมัติเมื่อเข้าสู่ระบบ
+                    }
+                });
+            },
+
+
+            methods: {
+                google_logout() {
+                    if (confirm("Are you sure you want to log out?")) {
+                        firebase.auth().signOut().then(() => {
+                            this.user = null;
+                            window.location.href = "p_login.html";  // กลับไปหน้า login
+                        }).catch((error) => {
+                            console.error("Logout Error:", error);
+                        });
+                    }
+                },
+
+                autoRead() {
+                    if (!this.user) return;
+                    db.collection("users")
+                        .where("email", "==", this.user.email)  // กรองข้อมูลของผู้ใช้ที่ล็อกอิน
+                        .onSnapshot((querySnapshot) => {
+                            var ulist = [];
+                            querySnapshot.forEach((doc) => {
+                                ulist.push({ id: doc.id, ...doc.data() });
+                            });
+                            this.users = ulist;
+                        });
+                },
+
+                edit(u) {
+                    this.editu = u;
+                    this.editmode = "แก้ไขข้อมูลส่วนตัว";  // ตั้งค่า edit mode ให้ถูกต้อง
+                },
+
+                saveData() {
+                    db.collection("users").doc(this.editu.id).set(this.editu).catch((error) => {
+                        console.error("Error saving data", error);
+                    });
+                },
+
+                deleteData(u) {
+                    if (confirm("ต้องการลบข้อมูล")) {
+                        db.collection("users").doc(u.id).delete().catch((error) => {
+                            console.error("Error deleting data", error);
+                        });
+                    }
+                },
+
+                addData() {
+                    this.editmode = "เพิ่มผู้ใช้";
+                    this.editu = {};
+                },
+            },
+
+        });
+
+        app.use(vuetify).mount("#app");
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EngageEdu</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css" rel="stylesheet">
+
+    <!-- Vue.js -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <!-- Vuetify -->
+    <link href="https://cdn.jsdelivr.net/npm/vuetify@3.4.10/dist/vuetify.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@3.4.10/dist/vuetify.min.js"></script>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+
+</head>
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Arial", sans-serif;
+    }
+
+    /* Header ปรับให้สูงขึ้นและมีเงา */
+    .custom-header {
+        height: 80px !important;
+        padding-top: 10px;
+        /* ขยายให้สูงขึ้น */
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        background-color: #734532 !important;
+        /* สีเทา-น้ำเงิน (blue-grey) */
+        border-bottom-left-radius: 10px;
+        border-bottom-right-radius: 10px;
+    }
+
+    .header {
+        color: #ffffff;
+        font-size: 24px;
+        font-weight: bold;
+    }
+
+    /* Sidebar */
+    .custom-sidebar {
+        background-color: white;
+        border: 2px solid #734532;
+        padding: 10px;
+        padding-top: 50px;
+        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .sidebar-item {
+        font-size: 18px;
+        font-weight: 500;
+        color: #000000;
+        border-radius: 8px;
+        transition: background 0.3s;
+    }
+
+    .sidebar-item:hover {
+        background: #aeaeae;
+    }
+
+    .content {
+        padding-top: 50px;
+        padding-right: 1px;
+        margin-left: 100px;
+        align-items: center;
+    }
+
+    .log {
+        padding-top: 10px;
+    }
+
+    a {
+        text-decoration: none;
+    }
+
+    .welcome {
+        padding-left: 7px;
+    }
+
+    .one {
+        padding-left: 10px;
+    }
+
+    .pa-10 {
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        /* เพิ่มเงา */
+        transition: box-shadow 0.3s ease, transform 0.3s ease;
+        /* ทำให้การเปลี่ยนแปลงเนียน */
+
+        background-color: #d4cbcb;
+    }
+
+    .pa-10:hover {
+        transform: translateY(-5px);
+        /* ทำให้ card ยกขึ้นเล็กน้อยเมื่อ hover */
+        box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.2);
+        /* เพิ่มเงามากขึ้นเมื่อ hover */
+    }
+
+    .v-btn:hover {
+        transform: scale(1.1);
+        /* ขยายขนาดปุ่มเล็กน้อย */
+        transition: transform 0.2s ease;
+    }
+
+    a {
+        text-decoration: none;
+    }
+
+    .mr-5 {
+        margin-left: 50px;
+    }
+
+    .custom-button {
+        background-color: #734532;
+    }
+
+    /* เพิ่มมิติให้กับ v-card */
+    .custom-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border-radius: 10px;
+        /* ทำให้มุมการ์ดโค้ง */
+    }
+
+    .custom-card:hover {
+        transform: translateY(-5px);
+        /* ยกขึ้นเมื่อ hover */
+        box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.2);
+        /* เพิ่มเงาเมื่อ hover */
+    }
+
+    /* สำหรับรูปภาพ */
+    .classroom-img {
+        border-radius: 10px 10px 0 0;
+        /* ทำให้รูปภาพมีมุมโค้ง */
+    }
+
+    /* สำหรับข้อความใน v-card */
+    .card-header {
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    /* สำหรับรหัสห้องเรียน */
+    .code-classroom {
+        color: #555;
+    }
+
+    body {
+        background-color: #ffffff;
+    }
+
+    .mimi {
+        margin-top: 90px;
+        /* ปรับค่าตามที่ต้องการ */
+        transition: all 0.3s ease;
+    }
+</style>
+
+<body>
+    <div id="app">
+        <v-app>
+            <v-app-bar class="custom-header" density="comfortable">
+                <v-toolbar-title class="header">EngageEdu</v-toolbar-title>
+            </v-app-bar>
+
+            <v-container fluid>
+                <v-row>
+                    <v-col cols="2">
+                        <v-navigation-drawer permanent class="custom-sidebar">
+                            <v-list dense>
+                                <v-list-item href="./p_home.html" class="sidebar-item">
+                                    <v-icon class="mr-3">mdi-home</v-icon> Home
+                                </v-list-item>
+
+                                <v-list-item href="./p_profile.html" class="sidebar-item">
+                                    <v-icon class="mr-3">mdi-account</v-icon> Profile
+                                </v-list-item>
+
+                                <v-list-item href="./p_create.html" class="sidebar-item">
+                                    <v-icon class="mr-3">mdi-book</v-icon> Create Class
+                                </v-list-item>
+
+                                <v-divider></v-divider>
+
+                                <div class="log">
+                                    <v-list-item v-if="user">
+                                        <v-btn block color="error" class="custom-button" @click="google_logout">
+                                            Log out
+                                        </v-btn>
+                                    </v-list-item>
+                                </div>
+                            </v-list>
+                        </v-navigation-drawer>
+                    </v-col>
+
+                    <v-col cols="10">
+                        <v-card v-for="c in classroom" :key="c.id" height="200px" class="mimi">
+                            <v-img :src="c.photo" cover height="100%" height="300px">
+                                <v-container class="fill-height d-flex align-center justify-center text-white">
+                                    <h2 class="text-white bg-overlay px-4 py-2 rounded">{{ c.name }}</h2>
+                                </v-container>
+                            </v-img>
+                        </v-card>
+
+                        <!-- <v-card class="pa-5 mt-3">
+                            <h3>Upcoming</h3>
+                            <p v-if="assignments.length === 0">Woohoo, no work due soon!</p>
+                        </v-card>
+                        <v-card v-for="assignment in assignments" :key="assignment.id" class="pa-5 mt-3">
+                            <div class="assignment d-flex justify-space-between align-center">
+                                <div>
+                                    <strong>{{ assignment.title }}</strong>
+                                    <p>{{ assignment.date }}</p>
+                                </div>
+                                <v-btn icon>
+                                    <v-icon>mdi-dots-vertical</v-icon>
+                                </v-btn>
+                            </div>
+                        </v-card> -->
+                    </v-col>
+
+                </v-row>
+
+
+            </v-container>
+
+        </v-app>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBkKXN0vafPsAJluoOy5fNzeMgPuYvc_CM",
+            authDomain: "project2566-bcb52.firebaseapp.com",
+            projectId: "project2566-bcb52",
+            storageBucket: "project2566-bcb52.firebasestorage.app",
+            messagingSenderId: "780274656067",
+            appId: "1:780274656067:web:26a8f3d6ad1476bacc85f6",
+            measurementId: "G-XRSE8HPBDL"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+    
+        const vuetify = Vuetify.createVuetify();
+    
+        const app = Vue.createApp({
+            data() {
+                return {
+                    classroom: null, // เก็บข้อมูลของวิชา
+                    user: null, // ข้อมูลผู้ใช้
+                    id: null // รหัสวิชาที่ได้จาก URL
+                };
+            },
+    
+            mounted() {
+                firebase.auth().onAuthStateChanged((user) => {
+                    this.user = user;
+                    if (!user) {
+                        window.location.href = "p_login.html";  // ถ้ายังไม่ล็อกอินให้กลับไปหน้า login
+                    }
+                });
+    
+                // ดึงค่าพารามิเตอร์จาก URL
+                const urlParams = new URLSearchParams(window.location.search);
+                this.code = urlParams.get("code");
+    
+                if (this.code) {
+                    console.log("Classroom ID from URL:", this.code); // ตรวจสอบค่า id
+                    this.fetchClassroomData(this.code);
+                }
+            },
+    
+            methods: {
+                google_logout() {
+                    if (confirm("Are you sure you want to log out?")) {
+                        firebase.auth().signOut().then(() => {
+                            this.user = null;
+                            window.location.href = "p_login.html";  // กลับไปหน้า login
+                        }).catch((error) => {
+                            console.error("Logout Error:", error);
+                        });
+                    }
+                },
+    
+                fetchClassroomData(code) {
+                    console.log("Fetching classroom data for code:", code);
+                    db.collection("classroom").doc(code).get()
+                        .then((doc) => {
+                            if (doc.exists) {
+                                this.classroom = { id: doc.id, ...doc.data() };
+                                console.log("Classroom Data:", this.classroom);
+                            } else {
+                                console.log("Classroom not found!");
+                            }
+                        })
+                        .catch((error) => {
+                            console.error("Error getting document:", error);
+                        });
+                }
+            },
+        });
+    
+        app.use(vuetify).mount("#app");
+    </script>
+    
+</body>
+
+</html>
