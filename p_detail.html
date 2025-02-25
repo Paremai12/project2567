@@ -21,6 +21,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 </head>
 
@@ -208,13 +209,19 @@
                     </v-col>
 
                     <v-col cols="10">
-                        <v-card v-for="c in classroom" :key="c.id" height="200px" class="mimi">
-                            <v-img :src="c.photo" cover height="100%" height="300px">
+                        <v-card v-for="c in classroom" :key="c.id" height="300px" class="mimi">
+                            <v-img :src="c.photo" cover height="200px">
                                 <v-container class="fill-height d-flex align-center justify-center text-white">
                                     <h2 class="text-white bg-overlay px-4 py-2 rounded">{{ c.name }}</h2>
                                 </v-container>
                             </v-img>
-                        </v-card>
+
+                            <v-card-actions class="d-flex justify-center">
+                                <v-btn icon @click="generateQRCode(c.id)">
+                                    <v-icon>mdi-qrcode</v-icon>
+                                </v-btn>
+                            </v-card-actions>
+                        </v-card>                        
 
                         <!-- <v-card class="pa-5 mt-3">
                             <h3>Upcoming</h3>
@@ -234,10 +241,19 @@
                     </v-col>
 
                 </v-row>
-
-
             </v-container>
 
+            <v-dialog v-model="showQRCodeDialog" max-width="300">
+                <v-card>
+                    <v-card-title>สแกน QR Code</v-card-title>
+                    <v-card-text>
+                        <div id="qrcode" class="d-flex justify-center"></div>
+                    </v-card-text>
+                    <v-card-actions>
+                        <v-btn block color="primary" @click="showQRCodeDialog = false">ปิด</v-btn>
+                    </v-card-actions>
+                </v-card>
+            </v-dialog>
         </v-app>
     </div>
 
@@ -253,36 +269,30 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-    
+
         const vuetify = Vuetify.createVuetify();
-    
+
         const app = Vue.createApp({
+
             data() {
                 return {
-                    classroom: null, // เก็บข้อมูลของวิชา
+                    classroom: [],  // All user data
                     user: null, // ข้อมูลผู้ใช้
-                    id: null // รหัสวิชาที่ได้จาก URL
+                    showQRCodeDialog: false
                 };
             },
-    
+
             mounted() {
                 firebase.auth().onAuthStateChanged((user) => {
                     this.user = user;
                     if (!user) {
                         window.location.href = "p_login.html";  // ถ้ายังไม่ล็อกอินให้กลับไปหน้า login
+                    } else {
+                        this.autoRead();  // ดึงข้อมูลห้องเรียนอัตโนมัติเมื่อเข้าสู่ระบบ
                     }
                 });
-    
-                // ดึงค่าพารามิเตอร์จาก URL
-                const urlParams = new URLSearchParams(window.location.search);
-                this.code = urlParams.get("code");
-    
-                if (this.code) {
-                    console.log("Classroom ID from URL:", this.code); // ตรวจสอบค่า id
-                    this.fetchClassroomData(this.code);
-                }
             },
-    
+
             methods: {
                 google_logout() {
                     if (confirm("Are you sure you want to log out?")) {
@@ -294,28 +304,36 @@
                         });
                     }
                 },
-    
-                fetchClassroomData(code) {
-                    console.log("Fetching classroom data for code:", code);
-                    db.collection("classroom").doc(code).get()
-                        .then((doc) => {
-                            if (doc.exists) {
-                                this.classroom = { id: doc.id, ...doc.data() };
-                                console.log("Classroom Data:", this.classroom);
-                            } else {
-                                console.log("Classroom not found!");
-                            }
-                        })
-                        .catch((error) => {
-                            console.error("Error getting document:", error);
+
+                autoRead() {
+                    const userEmail = this.user.email; // ดึงอีเมลของผู้ใช้ที่ล็อกอิน
+                    db.collection("classroom")
+                        .where("owner", "==", userEmail) // กรองข้อมูลห้องเรียนที่มีเจ้าของตรงกับอีเมล
+                        .onSnapshot((querySnapshot) => {
+                            var clist = [];
+                            querySnapshot.forEach((doc) => {
+                                clist.push({ id: doc.id, ...doc.data() });
+                            });
+                            this.classroom = clist;
                         });
-                }
+                },
+
+                generateQRCode(code) {
+                    this.showQRCodeDialog = true;
+                    this.$nextTick(() => {
+                        document.getElementById("qrcode").innerHTML = "";
+                        new QRCode(document.getElementById("qrcode"), {
+                            text: `https://yourapp.com/register?class=${code}`,
+                            width: 200,
+                            height: 200
+                        });
+                    });
+                },
             },
         });
-    
+
         app.use(vuetify).mount("#app");
     </script>
-    
 </body>
 
 </html>
