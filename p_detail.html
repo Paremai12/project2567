@@ -164,10 +164,80 @@
         background-color: #ffffff;
     }
 
-    .mimi {
+    #mimi {
         margin-top: 90px;
         /* ปรับค่าตามที่ต้องการ */
         transition: all 0.3s ease;
+    }
+
+    .classroom-card {
+        background-color: #fff;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .card-header-img {
+        border-top-left-radius: 12px;
+        border-top-right-radius: 12px;
+    }
+
+    .class-title {
+        font-size: 28px;
+        font-weight: 600;
+        color: #5A4034;
+        /* โทนสีน้ำตาลให้เข้ากับธีม */
+    }
+
+    .upcoming-card {
+        background-color: #f9f9f9;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        min-height: 160px;
+        transition: transform 0.2s;
+    }
+
+    .upcoming-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    .post-card {
+        background-color: #fff;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .post-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        background-color: #f5f5f5;
+    }
+
+    .text-secondary {
+        color: #757575;
+    }
+
+    .v-container {
+        max-width: 1200px;
+        /* กำหนดความกว้างสูงสุดของ container */
+        margin: 0 auto;
+        /* จัดให้อยู่กึ่งกลางหน้าจอ */
+    }
+
+    .upcoming-card,
+    .post-card {
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s;
+    }
+
+    .post-card:hover,
+    .upcoming-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
     }
 </style>
 
@@ -186,17 +256,13 @@
                                 <v-list-item href="./p_home.html" class="sidebar-item">
                                     <v-icon class="mr-3">mdi-home</v-icon> Home
                                 </v-list-item>
-
                                 <v-list-item href="./p_profile.html" class="sidebar-item">
                                     <v-icon class="mr-3">mdi-account</v-icon> Profile
                                 </v-list-item>
-
                                 <v-list-item href="./p_create.html" class="sidebar-item">
                                     <v-icon class="mr-3">mdi-book</v-icon> Create Class
                                 </v-list-item>
-
                                 <v-divider></v-divider>
-
                                 <div class="log">
                                     <v-list-item v-if="user">
                                         <v-btn block color="error" class="custom-button" @click="google_logout">
@@ -209,37 +275,109 @@
                     </v-col>
 
                     <v-col cols="10">
-                        <v-card v-for="c in classroom" :key="c.id" height="300px" class="mimi">
-                            <v-img :src="c.photo" cover height="200px">
-                                <v-container class="fill-height d-flex align-center justify-center text-white">
-                                    <h2 class="text-white bg-overlay px-4 py-2 rounded">{{ c.name }}</h2>
-                                </v-container>
-                            </v-img>
+                        <v-card v-for="c in classroom" :key="c.id" class="classroom-card mb-6" id="mimi">
+                            <v-img :src="c.photo" cover height="200px" class="card-header-img"></v-img>
 
-                            <v-card-actions class="d-flex justify-center">
-                                <v-btn icon @click="generateQRCode(c.id)">
-                                    <v-icon>mdi-qrcode</v-icon>
-                                </v-btn>
+                            <v-card-actions class="d-flex justify-center bg-white py-4">
+                                <h2 class="class-title" @click="loadQuestions(c.id)">{{ c.name }} {{ c.code }}</h2>
                             </v-card-actions>
-                        </v-card>                        
 
-                        <!-- <v-card class="pa-5 mt-3">
-                            <h3>Upcoming</h3>
-                            <p v-if="assignments.length === 0">Woohoo, no work due soon!</p>
+                            <v-row class="px-md-6 px-4">
+
+                                <!-- ส่วน Upcoming -->
+                                <v-col cols="12" md="4">
+                                    <v-card class="upcoming-card d-flex flex-column align-center pa-4">
+                                        <v-row class="d-flex justify-center">
+                                            <v-col cols="10" class="mx-10">
+                                                <v-btn block color="primary" @click="generateQRCode(c.id)">
+                                                    Show QR Code
+                                                </v-btn>
+                                            </v-col>
+
+                                            <v-col cols="10" class="mx-10">
+                                                <v-btn block color="success">
+                                                    Show Students
+                                                </v-btn>
+                                            </v-col>
+
+                                            <v-col cols="10" class="mx-10">
+                                                <v-btn block color="warning" @click="openAddDialog">
+                                                    Add Check-In
+                                                </v-btn>
+                                            </v-col>
+
+                                            <v-dialog v-model="showDialog" max-width="600px">
+                                                <v-card>
+                                                    <v-card-title class="text-h5">
+                                                        {{ editmode }}
+                                                    </v-card-title>
+
+                                                    <v-card-text>
+                                                        <v-text-field v-model="editq.question_no" label="ข้อ"
+                                                            required></v-text-field>
+                                                        <v-text-field v-model="editq.question_text" label="คำถาม"
+                                                            required></v-text-field>
+                                                    </v-card-text>
+
+                                                    <v-card-actions>
+                                                        <v-spacer></v-spacer>
+                                                        <v-btn color="red" @click="showDialog = false">Cancel</v-btn>
+                                                        <v-btn color="green" @click="submitQuestion">Save</v-btn>
+                                                    </v-card-actions>
+                                                </v-card>
+                                            </v-dialog>
+                                        </v-row>
+                                    </v-card>
+                                </v-col>
+
+                                <v-col cols="12" md="8">
+                                    <v-card class="post-card pa-4 mb-3" v-for="q in question" :key="q.id">
+                                        <v-icon left color="primary" class="mr-2">mdi-calendar</v-icon>
+                                        <strong>ข้อ {{ q.question_no }}:</strong>
+                                        <br>
+                                        <br>
+                                        {{ q.question_text }}
+                                        <br>
+                                        <br>
+                                        <v-btn small color="blue" @click="openEditDialog(q)" class="mr-3">
+                                            Edit
+                                        </v-btn>
+                                        <!-- ปุ่มลบคำถาม -->
+                                        <v-btn small color="red" @click="deleteQuestion(q.id)" class="mr-3">
+                                            Delete
+                                        </v-btn>
+
+                                        <v-btn color="primary" @click="startQuestionTimer" v-if="!questionActive"
+                                            class="mr-3">
+                                            เริ่มถาม
+                                        </v-btn>
+
+                                        <v-btn color="red" @click="stopQuestion" v-if="questionActive">
+                                            ปิดคำถาม
+                                        </v-btn>
+
+                                        <v-dialog v-model="showQuestionDialog" max-width="600px">
+                                            <v-card>
+                                                <v-card-title>
+                                                    เริ่มถาม: {{ currentQuestion.question_text }}
+                                                </v-card-title>
+                                                <v-card-text>
+                                                    <v-row>
+                                                        <v-col cols="12" class="text-center">
+                                                            <v-timer :time="remainingTime" format="mm:ss"></v-timer>
+                                                        </v-col>
+                                                    </v-row>
+                                                </v-card-text>
+                                                <v-card-actions>
+                                                    <v-btn color="green" @click="stopQuestion">ปิดคำถาม</v-btn>
+                                                </v-card-actions>
+                                            </v-card>
+                                        </v-dialog>
+                                    </v-card>
+                                </v-col>
+                            </v-row>
                         </v-card>
-                        <v-card v-for="assignment in assignments" :key="assignment.id" class="pa-5 mt-3">
-                            <div class="assignment d-flex justify-space-between align-center">
-                                <div>
-                                    <strong>{{ assignment.title }}</strong>
-                                    <p>{{ assignment.date }}</p>
-                                </div>
-                                <v-btn icon>
-                                    <v-icon>mdi-dots-vertical</v-icon>
-                                </v-btn>
-                            </div>
-                        </v-card> -->
                     </v-col>
-
                 </v-row>
             </v-container>
 
@@ -267,18 +405,35 @@
             appId: "1:780274656067:web:26a8f3d6ad1476bacc85f6",
             measurementId: "G-XRSE8HPBDL"
         };
+
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
         const vuetify = Vuetify.createVuetify();
 
         const app = Vue.createApp({
-
             data() {
                 return {
-                    classroom: [],  // All user data
+                    questionActive: false,  // ตรวจสอบว่าไดอะล็อกเปิดหรือไม่
+                    remainingTime: 600,     // เวลาถอยหลัง 10 นาที (600 วินาที)
+                    questionInterval: null, // ช่วยในการตั้ง interval สำหรับการนับเวลา
+                    currentQuestion: {},    // คำถามที่แสดงอยู่
+                    showQuestionDialog: false, // การแสดงไดอะล็อกคำถาม
+
+                    classroom: [], // ห้องเรียนทั้งหมด
+                    question: [],  // คำถามทั้งหมด
                     user: null, // ข้อมูลผู้ใช้
-                    showQRCodeDialog: false
+                    showQRCodeDialog: false, // เปิดปิด QR Code Dialog
+                    showDialog: false, // เปิดปิดไดอะล็อกสำหรับคำถาม
+                    editmode: 'Create Question', // โหมดสร้างหรือแก้ไขคำถาม
+                    editq: {
+                        id: null,
+                        question_no: '',
+                        question_text: ''
+                    },
+                    selectedClassroom: null // เก็บ ID ห้องเรียนที่เลือก
+
+
                 };
             },
 
@@ -286,9 +441,9 @@
                 firebase.auth().onAuthStateChanged((user) => {
                     this.user = user;
                     if (!user) {
-                        window.location.href = "p_login.html";  // ถ้ายังไม่ล็อกอินให้กลับไปหน้า login
+                        window.location.href = "p_login.html";
                     } else {
-                        this.autoRead();  // ดึงข้อมูลห้องเรียนอัตโนมัติเมื่อเข้าสู่ระบบ
+                        this.autoRead();
                     }
                 });
             },
@@ -298,38 +453,144 @@
                     if (confirm("Are you sure you want to log out?")) {
                         firebase.auth().signOut().then(() => {
                             this.user = null;
-                            window.location.href = "p_login.html";  // กลับไปหน้า login
+                            window.location.href = "p_login.html";
                         }).catch((error) => {
                             console.error("Logout Error:", error);
                         });
                     }
                 },
 
+                // ดึงข้อมูลห้องเรียน
                 autoRead() {
-                    const userEmail = this.user.email; // ดึงอีเมลของผู้ใช้ที่ล็อกอิน
+                    const userEmail = this.user.email;
                     db.collection("classroom")
-                        .where("owner", "==", userEmail) // กรองข้อมูลห้องเรียนที่มีเจ้าของตรงกับอีเมล
+                        .where("owner", "==", userEmail)
                         .onSnapshot((querySnapshot) => {
                             var clist = [];
                             querySnapshot.forEach((doc) => {
                                 clist.push({ id: doc.id, ...doc.data() });
                             });
                             this.classroom = clist;
+                            console.log("Classrooms:", this.classroom); // ตรวจสอบข้อมูลห้องเรียน
                         });
                 },
 
+                // ดึงคำถามจาก Firebase สำหรับห้องเรียนที่เลือก
+                loadQuestions(classroomId) {
+                    this.selectedClassroom = classroomId; // เก็บ classroomId ที่เลือก
+                    db.collection("question")
+                        .where("classroomId", "==", classroomId) // เปลี่ยนไปใช้ classroomId
+                        .onSnapshot((querySnapshot) => {
+                            var qlist = [];
+                            querySnapshot.forEach((doc) => {
+                                qlist.push({ id: doc.id, ...doc.data() });
+                            });
+                            this.question = qlist;
+                            console.log("Questions:", this.question); // ตรวจสอบคำถามที่ได้รับ
+                        });
+                },
+
+                // เปิดไดอะล็อกสร้างคำถามใหม่
+                openAddDialog() {
+                    this.editmode = 'Create Question';
+                    this.editq = { id: null, question_no: '', question_text: '' };
+                    this.showDialog = true;
+                },
+
+                // บันทึกคำถามลง Firebase
+                submitQuestion() {
+                    // ตรวจสอบว่าทั้ง question_no และ question_text ถูกกรอกครบถ้วนหรือไม่
+                    if (this.editq.question_no && this.editq.question_text) {
+                        if (this.editq.id) {
+                            // แก้ไขคำถามที่มีอยู่แล้ว
+                            db.collection("question").doc(this.editq.id).update({
+                                question_no: this.editq.question_no,
+                                question_text: this.editq.question_text
+                            }).then(() => {
+                                this.showDialog = false;
+                                this.loadQuestions(this.selectedClassroom); // รีโหลดคำถามจากห้องเรียนที่เลือก
+                            }).catch((error) => {
+                                console.error("Error updating question: ", error);
+                            });
+                        } else {
+                            // เพิ่มคำถามใหม่
+                            db.collection("question").add({
+                                classroomId: this.selectedClassroom, // เพิ่ม classroomId เพื่อเชื่อมโยงคำถามกับห้องเรียน
+                                question_no: this.editq.question_no,
+                                question_text: this.editq.question_text
+                            }).then(() => {
+                                this.showDialog = false;
+                                this.loadQuestions(this.selectedClassroom); // รีโหลดคำถามจากห้องเรียนที่เลือก
+                            }).catch((error) => {
+                                console.error("Error adding question: ", error);
+                            });
+                        }
+                    } else {
+                        alert("กรุณากรอกข้อมูลให้ครบถ้วน");
+                    }
+                },
+
+                // เปิดโหมดแก้ไขคำถาม
+                openEditDialog(question) {
+                    this.editmode = 'Edit Question';
+                    this.editq = { ...question };
+                    this.showDialog = true;
+                },
+
+                // สร้าง QR Code
                 generateQRCode(code) {
                     this.showQRCodeDialog = true;
                     this.$nextTick(() => {
                         document.getElementById("qrcode").innerHTML = "";
                         new QRCode(document.getElementById("qrcode"), {
-                            text: `https://yourapp.com/register?class=${code}`,
+                            text: `http://127.0.0.1:5501/p_detail.html/register?class=${code}`,
                             width: 200,
                             height: 200
                         });
                     });
                 },
-            },
+
+                // ฟังก์ชันลบคำถาม
+                deleteQuestion(questionId) {
+                    if (confirm("คุณแน่ใจหรือไม่ว่าต้องการลบคำถามนี้?")) {
+                        db.collection("question").doc(questionId).delete()
+                            .then(() => {
+                                alert("ลบคำถามเรียบร้อยแล้ว");
+                                this.loadQuestions(this.selectedClassroom); // รีโหลดคำถามหลังจากลบ
+                            })
+                            .catch((error) => {
+                                console.error("Error deleting question: ", error);
+                                alert("เกิดข้อผิดพลาดในการลบคำถาม");
+                            });
+                    }
+                },
+
+                // ฟังก์ชันเริ่มนับเวลา
+                startQuestionTimer() {
+                    if (this.question.length > 0) {
+                        this.currentQuestion = this.question[0]; // กำหนดคำถามแรก
+                        this.showQuestionDialog = true;           // แสดงไดอะล็อก
+                        this.questionActive = true;               // ตั้งสถานะว่าเริ่มถามแล้ว
+
+                        // ตั้งค่าเวลาใหม่และเริ่มนับเวลา
+                        this.remainingTime = 600; // เวลาถอยหลัง 10 นาที
+                        this.questionInterval = setInterval(() => {
+                            if (this.remainingTime > 0) {
+                                this.remainingTime--; // ลดเวลาทุกวินาที
+                            } else {
+                                this.stopQuestion(); // หยุดถามเมื่อหมดเวลา
+                            }
+                        }, 1000);
+                    }
+                },
+
+                // ฟังก์ชันหยุดถามและปิดไดอะล็อก
+                stopQuestion() {
+                    clearInterval(this.questionInterval); // หยุดการนับเวลา
+                    this.questionActive = false;           // ตั้งสถานะว่าไม่มีการถาม
+                    this.showQuestionDialog = false;       // ปิดไดอะล็อก
+                },
+            }
         });
 
         app.use(vuetify).mount("#app");
